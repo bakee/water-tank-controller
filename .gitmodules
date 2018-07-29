@@ -1,0 +1,3 @@
+[submodule "water-tank-controller/hal"]
+	path = water-tank-controller/hal
+	url = ../hal/
