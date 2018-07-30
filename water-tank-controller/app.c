@@ -4,22 +4,13 @@
 #include "hal/interrupt.h"
 #include "hal/sleep.h"
 #include "hal/analog_comparator.h"
+#include "hal/gpio.h"
 
 #include "bll/util.h"
 #include "bll/ultrasonic.h"
 #include "bll/timer.h"
 #include "bll/uart.h"
-
-#define HEART_BEAT_DDR DDRB
-#define HEART_BEAT_PORT PORTB
-#define HEART_BEAT_PIN PINB0
-
-#define RELAY_DDR DDRB
-#define RELAY_PORT PORTB
-#define RELAY_PIN PINB1
-
-#define MINIMUM_WATER_DISTANCE 250 // 25 cm
-#define MAXIMUM_WATER_DISTANCE 650 // 65 cm
+#include "bll/relay.h"
 
 #ifdef DEBUG
 #define INITIAL_DELAY_MS 2000
@@ -27,94 +18,53 @@
 #define INITIAL_DELAY_MS 64000 // 64 second initial delay to let the ultrasonic sensor to boot up
 #endif // _DEBUG
 
-
-uint8_t _isRelayOn = FALSE;
-
-inline void initializePorts() {
-  CLEAR_BIT(HEART_BEAT_PORT, HEART_BEAT_PIN);
-  CLEAR_BIT(RELAY_PORT, RELAY_PIN);
-  
-  SET_BIT(HEART_BEAT_DDR, HEART_BEAT_PIN);
-  SET_BIT(RELAY_DDR, RELAY_PIN);
-}
-
-inline void _turnRelayOn() {
-  SET_BIT(RELAY_PORT, RELAY_PIN);
-  _isRelayOn = TRUE;
-}
-
-inline void _turnRelayOff() {
-  CLEAR_BIT(RELAY_PORT, RELAY_PIN);
-  _isRelayOn = FALSE;
-}
-
-inline void _turnHeartBeatOn() {
-  SET_BIT(HEART_BEAT_PORT, HEART_BEAT_PIN);
-}
-
-inline void _turnHeartBeatOff() {
-  CLEAR_BIT(HEART_BEAT_PORT, HEART_BEAT_PIN);
-}
+#define SHORT_DELAY 800
 
 inline void _toggleHeartBeat() {
-  if(IS_BIT_SET(HEART_BEAT_PORT, HEART_BEAT_PIN)) {
-    _turnHeartBeatOff();
+  if(hal_gpio_isHeartBeatLEDOn()) {
+    hal_gpio_turnOffHeartBeatLED();
     } else {
-    _turnHeartBeatOn();
+    hal_gpio_turnOnHeartBeatLED();
   }
-}
-
-inline void _enableGPIOPullUps() {
-  DDRB = 0x00;
-  PORTB = 0xFF;
-  
-  DDRC = 0x00;
-  PORTC = 0xFF;
-  
-  DDRD = 0x00;
-  DDRC = 0xFF;
 }
 
 void _initialDelay() {
   uint16_t initialTickCount = timer_getTickCount();
+  uint16_t shortDelayCount = initialTickCount;
   while (timer_getTickCount() - initialTickCount < INITIAL_DELAY_MS) {
-    _toggleHeartBeat();
+    if(timer_getTickCount() - shortDelayCount > SHORT_DELAY) {
+      _toggleHeartBeat();
+      shortDelayCount = timer_getTickCount();
+    }
     hal_sleep_enterSleepMode();
   }
 }
 
 inline void initialize() {
   hal_analog_comparator_disable();
-  _enableGPIOPullUps();
-  initializePorts();
+  hal_gpio_enableGPIOPullUps();
+  hal_gpio_initializeHeartbeatLED();
+  relay_initialize();
   timer_initialize();
-  _initialDelay();
   ultrasonic_initalize();
+  uart_setupTriggerPin();
   
   hal_interrupt_enableGlobalInterrupt();
-}
-
-inline void handleRelayLogic() {
-  uint16_t distanceToWater = ultrasonic_getDistanceInMillimeter();
-  if(_isRelayOn && (distanceToWater < MINIMUM_WATER_DISTANCE)) {
-    _turnRelayOff();
-    } else if(!_isRelayOn && (distanceToWater > MAXIMUM_WATER_DISTANCE)) {
-    _turnRelayOn();
-  }
 }
 
 int main(void) {
   initialize();
   
+  _initialDelay();
+  
   while(1) {
     timer_run();
     ultrasonic_run();
     uart_run();
+    relay_run();
     
-    handleRelayLogic();
-    
-    _turnHeartBeatOff();
+    hal_gpio_turnOffHeartBeatLED();
     hal_sleep_enterSleepMode();
-    _turnHeartBeatOn();
+    hal_gpio_turnOnHeartBeatLED();
   }
 }

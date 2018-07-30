@@ -16,5 +16,6 @@
  void uart_sendString(const char* string, uint8_t length);
  void uart_sendNumber(uint16_t number);
  void uart_sendLineBreak();
+ void uart_setupTriggerPin();
  
  #endif // _UART_H_

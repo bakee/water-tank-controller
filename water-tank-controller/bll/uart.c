@@ -73,7 +73,7 @@ inline void _setTransmitPending() {
 }
 
 void _onEnableRequest() {
- _isEnableRequested = TRUE; 
+  _isEnableRequested = TRUE;
 }
 
 // End of private functions
@@ -97,11 +97,15 @@ void uart_sendLineBreak() {
   uart_sendChar(NEWLINE_CHAR);
 }
 
+void uart_setupTriggerPin() {
+  hal_interrupt_onInterrupt1 = _onEnableRequest;
+  hal_interrupt_enableInterrupt1(Interrupt_Interrupt1Sense_FallingEdge);
+}
+
 void uart_run() {
   if (!_isInitialized && _isEnableRequested) {
     uart_initialize();
     _isEnableRequested = FALSE;
-    _isInitialized = TRUE;
   }
   
   if (_isInitialized && _isDisableRequested) {
@@ -118,7 +122,7 @@ void uart_run() {
   if(timer_getTickCount() - lastDisplayTickCount > DISPLAY_INTERVAL) {
     uart_sendString("Distance: ", 10);
     uart_sendNumber(ultrasonic_getDistanceInMillimeter());
-    uart_sendString(" cm.", 4);
+    uart_sendString(" mm.", 4);
     uart_sendLineBreak();
     
     lastDisplayTickCount = timer_getTickCount();
@@ -141,6 +145,5 @@ void uart_initialize() {
   hal_uart_onTransmitComplete = _transmit;
   hal_uart_onReceiveComplete = _onByteReceived;
   hal_uart_initialize();
-  hal_interrupt_onInterrupt1 = _onEnableRequest;
-  hal_interrupt_enableInterrupt1(Interrupt_Interrupt1Sense_FallingEdge);
+  _isInitialized = TRUE;
 }

@@ -11,7 +11,12 @@
 #include "timer.h"
 #include "ultrasonic.h"
 
+#ifdef DEBUG
+#define MEASUREMENT_INTERVAL_IN_MILLISECONDS  1000
+#else
 #define MEASUREMENT_INTERVAL_IN_MILLISECONDS  5000
+#endif
+
 
 #define MAX_MEASUREMENTS_TO_STORE 32
 uint16_t measurementArray[MAX_MEASUREMENTS_TO_STORE];
