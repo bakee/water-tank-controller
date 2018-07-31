@@ -12,11 +12,10 @@
 #include "ultrasonic.h"
 
 #ifdef DEBUG
-#define MEASUREMENT_INTERVAL_IN_MILLISECONDS  1000
+#define INITIAL_DELAY_MS 2000
 #else
-#define MEASUREMENT_INTERVAL_IN_MILLISECONDS  5000
-#endif
-
+#define INITIAL_DELAY_MS 64000 // 64 second initial delay to let the ultrasonic sensor to boot up
+#endif // _DEBUG
 
 #define MAX_MEASUREMENTS_TO_STORE 32
 uint16_t measurementArray[MAX_MEASUREMENTS_TO_STORE];
@@ -25,6 +24,8 @@ uint16_t lastCalculatedDistanceInMillimeter = 0xFFFF;
 volatile uint32_t lastTimerValue = 0;
 volatile uint8_t isEchoReceived = FALSE;
 uint16_t lastMeasurementTickCount = 0;
+uint16_t _measurementInterval;
+static uint8_t _isFirstMeasurementTaken = FALSE;
 
 void _onEchoReceived(uint16_t distanceInMillimeter) {
   lastCalculatedDistanceInMillimeter = distanceInMillimeter;
@@ -39,6 +40,14 @@ void _addCurrentMeasurementToArray(uint16_t measurement) {
   measurementArray[measurementArrayIndex++] = measurement;
 }
 
+uint8_t _isSensorInitialized() {
+  return (timer_getTickCount() > INITIAL_DELAY_MS);
+}
+
+uint8_t ultrasonic_isReady() {
+  return _isFirstMeasurementTaken;
+}
+
 uint8_t ultrasonic_getLastMeasurements(uint16_t* container) {
   uint8_t i;
   
@@ -48,6 +57,10 @@ uint8_t ultrasonic_getLastMeasurements(uint16_t* container) {
   
   measurementArrayIndex = 0;
   return i;
+}
+
+void ultrasonic_setMeasurementInterval(uint16_t interval) {
+  _measurementInterval = interval;
 }
 
 void ultrasonic_initalize() {
@@ -69,8 +82,16 @@ uint16_t ultrasonic_getDistanceInMillimeter() {
 }
 
 void ultrasonic_run() {
+  if(!_isFirstMeasurementTaken && _isSensorInitialized()) {
+    ultrasonic_triggerMeasurement();
+    lastMeasurementTickCount = timer_getTickCount();
+    _isFirstMeasurementTaken = TRUE;
+    } else if (!_isFirstMeasurementTaken) {
+    return;
+  }  
+  
   // Trigger a measurement if interval reached
-  if((timer_getTickCount() - lastMeasurementTickCount) > MEASUREMENT_INTERVAL_IN_MILLISECONDS) {
+  if((timer_getTickCount() - lastMeasurementTickCount) > _measurementInterval) {
     ultrasonic_triggerMeasurement();
     lastMeasurementTickCount = timer_getTickCount();
   }

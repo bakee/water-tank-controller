@@ -12,13 +12,10 @@
 #include "bll/uart.h"
 #include "bll/relay.h"
 
-#ifdef DEBUG
-#define INITIAL_DELAY_MS 2000
-#else
-#define INITIAL_DELAY_MS 64000 // 64 second initial delay to let the ultrasonic sensor to boot up
-#endif // _DEBUG
-
 #define SHORT_DELAY 800
+
+
+static uint16_t _initializingHearbeatTimer = 0;
 
 inline void _toggleHeartBeat() {
   if(hal_gpio_isHeartBeatLEDOn()) {
@@ -28,16 +25,18 @@ inline void _toggleHeartBeat() {
   }
 }
 
-void _initialDelay() {
-  uint16_t initialTickCount = timer_getTickCount();
-  uint16_t shortDelayCount = initialTickCount;
-  while (timer_getTickCount() - initialTickCount < INITIAL_DELAY_MS) {
-    if(timer_getTickCount() - shortDelayCount > SHORT_DELAY) {
-      _toggleHeartBeat();
-      shortDelayCount = timer_getTickCount();
-    }
-    hal_sleep_enterSleepMode();
+void _showInitializingHearbeat(){
+  if(timer_getTickCount() - _initializingHearbeatTimer > SHORT_DELAY) {
+    _toggleHeartBeat();
+    _initializingHearbeatTimer = timer_getTickCount();
   }
+  hal_sleep_enterSleepMode();
+}
+
+void _showRunningHearbeat() {
+  hal_gpio_turnOffHeartBeatLED();
+  hal_sleep_enterSleepMode();
+  hal_gpio_turnOnHeartBeatLED();
 }
 
 inline void initialize() {
@@ -55,16 +54,16 @@ inline void initialize() {
 int main(void) {
   initialize();
   
-  _initialDelay();
-  
   while(1) {
     timer_run();
+    relay_run();
     ultrasonic_run();
     uart_run();
-    relay_run();
     
-    hal_gpio_turnOffHeartBeatLED();
-    hal_sleep_enterSleepMode();
-    hal_gpio_turnOnHeartBeatLED();
+    if(ultrasonic_isReady()) {
+      _showRunningHearbeat();
+      } else {
+      _showInitializingHearbeat();
+    }
   }
 }

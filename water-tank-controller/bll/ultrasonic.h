@@ -15,8 +15,10 @@
 
 void ultrasonic_triggerMeasurement();
 uint8_t ultrasonic_isResultReady();
+void ultrasonic_setMeasurementInterval(uint16_t interval);
 uint16_t ultrasonic_getDistanceInMillimeter();
 uint8_t ultrasonic_getLastMeasurements(uint16_t* container);
+uint8_t ultrasonic_isReady();
 void ultrasonic_initalize();
 void ultrasonic_run();
 
