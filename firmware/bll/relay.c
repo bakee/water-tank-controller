@@ -1,6 +1,6 @@
 #include <avr/io.h>
 
-#include "../../hal/hal/gpio.h"
+#include "../../../hal/gpio.h"
 
 #include "common.h"
 #include "relay.h"

@@ -5,7 +5,7 @@
 *  Author: abdullah
 */
 
-#include "../../hal/hal/timer.h"
+#include "../../../hal/timer.h"
 #include "timer.h"
 
 

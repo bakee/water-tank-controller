@@ -5,7 +5,7 @@
 *  Author: abdullah
 */
 
-#include "../../hal/hal/ultrasonic.h"
+#include "../../../hal/ultrasonic.h"
 
 #include "common.h"
 #include "timer.h"
