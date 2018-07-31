@@ -1,6 +1,6 @@
-#include "../hal/uart.h"
-#include "../hal/interrupt.h"
-#include "../hal/gpio.h"
+#include "../../hal/hal/uart.h"
+#include "../../hal/hal/interrupt.h"
+#include "../../hal/hal/gpio.h"
 
 #include "common.h"
 #include "buffer.h"

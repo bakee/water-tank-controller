@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <avr/io.h>
 
-#include "hal/interrupt.h"
-#include "hal/sleep.h"
-#include "hal/analog_comparator.h"
-#include "hal/gpio.h"
+#include "../hal/hal/interrupt.h"
+#include "../hal/hal/sleep.h"
+#include "../hal/hal/analog_comparator.h"
+#include "../hal/hal/gpio.h"
 
 #include "bll/util.h"
 #include "bll/ultrasonic.h"
