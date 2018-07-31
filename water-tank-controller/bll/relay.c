@@ -55,5 +55,7 @@ void relay_run() {
     } else if(!relay_isTurnedOn() && (distanceToWater > MAXIMUM_WATER_DISTANCE)) {
     relay_turnOn();
     ultrasonic_setMeasurementInterval(MEASUREMENT_INTERVAL_FAST);
+  } else if(!relay_isTurnedOn()) {
+    ultrasonic_setMeasurementInterval(MEASUREMENT_INTERVAL_SLOW);
   }
 }

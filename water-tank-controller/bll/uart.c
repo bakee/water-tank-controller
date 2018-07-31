@@ -1,5 +1,6 @@
 #include "../hal/uart.h"
 #include "../hal/interrupt.h"
+#include "../hal/gpio.h"
 
 #include "common.h"
 #include "buffer.h"
@@ -98,6 +99,7 @@ void uart_sendLineBreak() {
 }
 
 void uart_setupTriggerPin() {
+  hal_gpio_initializeInterrupt1Pin();
   hal_interrupt_onInterrupt1 = _onEnableRequest;
   hal_interrupt_enableInterrupt1(Interrupt_Interrupt1Sense_FallingEdge);
 }

@@ -10,9 +10,6 @@
 
 #include <stdint.h>
 
-// 
-#define CUSTOM_TO_CM (58 / 32)
-
 void ultrasonic_triggerMeasurement();
 uint8_t ultrasonic_isResultReady();
 void ultrasonic_setMeasurementInterval(uint16_t interval);
@@ -21,6 +18,5 @@ uint8_t ultrasonic_getLastMeasurements(uint16_t* container);
 uint8_t ultrasonic_isReady();
 void ultrasonic_initalize();
 void ultrasonic_run();
-
 
 #endif // _ULTRASONIC_H_
